@@ -1,0 +1,167 @@
+﻿@model List<PaymentPortal.Models.PaymentRequest>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    body {
+        background-color: #f4fdf5;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    
+
+    h2 {
+        font-size: 2rem;
+        color: #2e7d32;
+        margin-bottom: 2rem;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: auto;
+        text-align: left;
+    }
+
+    thead {
+        background: linear-gradient(to right, #a8e063, #56ab2f);
+        color: white;
+    }
+
+    th, td {
+        padding: 1rem;
+        border-bottom: 1px solid #eee;
+        vertical-align: middle;
+        white-space: normal;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        text-align: left;
+    }
+
+    .btn-sm {
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        margin-right: 0.5rem;
+    }
+
+    .btn-success {
+        background-color: #4caf50;
+        color: white;
+        border: none;
+    }
+
+    .btn-warning {
+        background-color: #ff9800;
+        color: white;
+        border: none;
+    }
+
+    .badge {
+        padding: 0.5em 1em;
+        border-radius: 1em;
+        font-size: 0.9em;
+        display: inline-block;
+    }
+
+        .badge.bg-primary {
+            background-color: #1976d2;
+            color: white;
+        }
+
+        .badge.bg-success {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        .badge.bg-secondary {
+            background-color: #9e9e9e;
+            color: white;
+        }
+
+        .badge.bg-muted {
+            background-color: #d6d6d6;
+            color: #555;
+        }
+</style>
+
+<div class="dashboard-container">
+    <h2>Employee Dashboard</h2>
+
+    @if (!Model.Any())
+    {
+        <p class="text-center">There are no transactions at the moment.</p>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Amount</th>
+                    <th>Currency</th>
+                    <th>Payee Name</th>
+                    <th>Payee Account</th>
+                    <th>SWIFT Code</th>
+                    <th>Bank</th>
+                    <th>Submitted By</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var payment in Model)
+                {
+                    <tr>
+                        <td>@payment.Id</td>
+                        <td>@payment.Amount.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)</td>
+                        <td>@payment.Currency</td>
+                        <td>@payment.PayeeName</td>
+                        <td>@payment.PayeeAccount</td>
+                        <td>@payment.SWIFTCode</td>
+                        <td>@payment.BankName</td>
+                        <td>@payment.SubmittedBy</td>
+                        <td>@payment.DateCreated.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</td>
+                        <td>
+                            @if (payment.IsSubmittedToSwift)
+                            {
+                                <span class="badge bg-success">Submitted</span>
+                            }
+                            else if (payment.IsVerified)
+                            {
+                                <span class="badge bg-primary">Verified</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Pending</span>
+                            }
+                        </td>
+                        <td>
+                            @if (!payment.IsVerified)
+                            {
+                                <form asp-action="Verify" method="post" style="display:inline">
+                                    <input type="hidden" name="id" value="@payment.Id" />
+                                    <button type="submit" class="btn btn-warning btn-sm">Verify</button>
+                                </form>
+                            }
+                            else if (!payment.IsSubmittedToSwift)
+                            {
+                                <form asp-action="SubmitToSwift" method="post" style="display:inline">
+                                    <input type="hidden" name="id" value="@payment.Id" />
+                                    <button type="submit" class="btn btn-success btn-sm">Submit</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <span class="badge bg-muted">Done</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
