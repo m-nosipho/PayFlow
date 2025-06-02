@@ -1,5 +1,3 @@
-# Triggering rebuild
-
 version: 2.1
 
 orbs:
@@ -8,26 +6,21 @@ orbs:
 jobs:
   build:
     docker:
-      - image: mcr.microsoft.com/dotnet/sdk:6.0
+      - image: mcr.microsoft.com/dotnet/sdk:9.0-preview  
     steps:
       - checkout
       - run:
-          name: Restore NuGet packages
+          name: Install Dependencies
           command: dotnet restore
       - run:
-          name: Build the project
+          name: Build
           command: dotnet build --no-restore
       - run:
-          name: Run SonarCloud analysis
-          command: |
-            dotnet tool install --global dotnet-sonarscanner
-            export PATH="$PATH:/root/.dotnet/tools"
-            dotnet sonarscanner begin /k:"m-nosipho_PayFlow" /o:"m-nosipho" /d:sonar.token=$SONAR_TOKEN
-            dotnet build
-            dotnet sonarscanner end /d:sonar.token=$SONAR_TOKEN
+          name: Run Tests
+          command: dotnet test --no-build
+      - sonarcloud/scan
 
 workflows:
-  version: 2
   build_and_analyze:
     jobs:
       - build
