@@ -1,0 +1,31 @@
+version: 2.1
+
+orbs:
+  sonarcloud: sonarsource/sonarcloud@1.1.1
+
+jobs:
+  build:
+    docker:
+      - image: mcr.microsoft.com/dotnet/sdk:6.0
+    steps:
+      - checkout
+      - run:
+          name: Restore NuGet packages
+          command: dotnet restore
+      - run:
+          name: Build the project
+          command: dotnet build --no-restore
+      - run:
+          name: Run SonarCloud analysis
+          command: |
+            dotnet tool install --global dotnet-sonarscanner
+            export PATH="$PATH:/root/.dotnet/tools"
+            dotnet sonarscanner begin /k:"m-nosipho_PayFlow" /o:"m-nosipho" /d:sonar.token=$SONAR_TOKEN
+            dotnet build
+            dotnet sonarscanner end /d:sonar.token=$SONAR_TOKEN
+
+workflows:
+  version: 2
+  build_and_analyze:
+    jobs:
+      - build
