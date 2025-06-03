@@ -5,8 +5,7 @@ orbs:
 
 jobs:
   build_and_analyze:
-    docker:
-      - image: cimg/dotnet:7.0.10
+    machine: true  # <-- Use machine executor for Docker login to work properly
     steps:
       - checkout
 
@@ -16,12 +15,18 @@ jobs:
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_LOGIN" --password-stdin
 
       - run:
-          name: Install unzip
+          name: Install .NET SDK
           command: |
-            sudo apt-get update && sudo apt-get install -y unzip
+            sudo apt-get update
+            sudo apt-get install -y dotnet-sdk-7.0
+            dotnet --version
 
       - run:
-          name: Install Dependencies
+          name: Install unzip
+          command: sudo apt-get install -y unzip
+
+      - run:
+          name: Restore Dependencies
           command: dotnet restore
 
       - run:
@@ -30,7 +35,11 @@ jobs:
 
       - run:
           name: Run Tests
-          command: dotnet test --no-restore --no-build --verbosity normal
+          command: |
+            dotnet test --no-restore --no-build --verbosity normal \
+              /p:CollectCoverage=true \
+              /p:CoverletOutputFormat=opencover \
+              /p:CoverletOutput=TestResults/coverage.xml
 
       - sonarcloud/scan
 
