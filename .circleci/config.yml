@@ -5,7 +5,7 @@ orbs:
 
 jobs:
   build_and_analyze:
-    machine: true  # <-- Use machine executor for Docker login to work properly
+    machine: true  # Use machine executor for full Docker & .NET install flexibility
     steps:
       - checkout
 
@@ -15,11 +15,13 @@ jobs:
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_LOGIN" --password-stdin
 
       - run:
-          name: Install .NET SDK
+          name: Install .NET 7 SDK
           command: |
-            sudo apt-get update
-            sudo apt-get install -y dotnet-sdk-7.0
-            dotnet --version
+            wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
+            chmod +x dotnet-install.sh
+            ./dotnet-install.sh --version 7.0.119
+            echo 'export DOTNET_ROOT=$HOME/.dotnet' >> $BASH_ENV
+            echo 'export PATH=$PATH:$HOME/.dotnet:$HOME/.dotnet/tools' >> $BASH_ENV
 
       - run:
           name: Install unzip
@@ -27,15 +29,20 @@ jobs:
 
       - run:
           name: Restore Dependencies
-          command: dotnet restore
+          command: |
+            source $BASH_ENV
+            dotnet restore
 
       - run:
           name: Build
-          command: dotnet build --no-restore --configuration Release
+          command: |
+            source $BASH_ENV
+            dotnet build --no-restore --configuration Release
 
       - run:
-          name: Run Tests
+          name: Run Tests with Coverage
           command: |
+            source $BASH_ENV
             dotnet test --no-restore --no-build --verbosity normal \
               /p:CollectCoverage=true \
               /p:CoverletOutputFormat=opencover \
