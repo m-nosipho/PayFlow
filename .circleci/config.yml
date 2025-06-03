@@ -6,9 +6,14 @@ orbs:
 jobs:
   build_and_analyze:
     docker:
-      - image: cimg/dotnet:7.0.10  # ✅ Working .NET image
+      - image: cimg/dotnet:7.0.10
     steps:
       - checkout
+
+      - run:
+          name: Docker Login
+          command: |
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_LOGIN" --password-stdin
 
       - run:
           name: Install unzip
